@@ -14,8 +14,8 @@ def scaled_tol(n):
 
 # bespoke test generators
 def infNormLessThanTol(a, b, tol):
-    def asserter(self):
-        self.assertLessEqual(infnorm(a - b), tol)
+    def asserter():
+        assert infnorm(a - b) <= tol
 
     return asserter
 
