@@ -2,7 +2,7 @@
 
 import itertools
 import operator
-import unittest
+import pytest
 
 import numpy as np
 
@@ -26,72 +26,57 @@ _coeffs2vals = Chebtech2._coeffs2vals
 
 
 # ------------------------
-class ChebyshevPoints(unittest.TestCase):
-    """Unit-tests for Chebtech2"""
+"""Unit-tests for Chebtech2"""
 
-    def test_chebpts_0(self):
-        self.assertEquals(Chebtech2._chebpts(0).size, 0)
+def test_chebpts_0():
+    assert Chebtech2._chebpts(0).size == 0
 
-    def test_vals2coeffs_empty(self):
-        self.assertEquals(_vals2coeffs(np.array([])).size, 0)
+def test_vals2coeffs_empty():
+    assert _vals2coeffs(np.array([])).size == 0
 
-    def test_coeffs2vals_empty(self):
-        self.assertEquals(_coeffs2vals(np.array([])).size, 0)
+def test_coeffs2vals_empty():
+    assert _coeffs2vals(np.array([])).size == 0
 
-    # check we are returned the array for an array of size 1
-    def test_vals2coeffs_size1(self):
-        for k in np.arange(10):
-            fk = np.array([k])
-            self.assertLessEqual(infnorm(_vals2coeffs(fk) - fk), eps)
+# check we are returned the array for an array of size 1
+def test_vals2coeffs_size1():
+    for k in np.arange(10):
+        fk = np.array([k])
+        assert infnorm(_vals2coeffs(fk) - fk) <= eps
 
-    # check we are returned the array for an array of size 1
-    def test_coeffs2vals_size1(self):
-        for k in np.arange(10):
-            ak = np.array([k])
-            self.assertLessEqual(infnorm(_coeffs2vals(ak) - ak), eps)
+# check we are returned the array for an array of size 1
+def test_coeffs2vals_size1():
+    for k in np.arange(10):
+        ak = np.array([k])
+        assert infnorm(_coeffs2vals(ak) - ak) <= eps
 
-    # TODO: further checks for chepbts
+# TODO: further checks for chepbts
 
 
 # ------------------------------------------------------------------------
 # Tests to verify the mutually inverse nature of vals2coeffs and coeffs2vals
 # ------------------------------------------------------------------------
-def vals2coeffs2valsTester(n):
-    def asserter(self):
-        values = np.random.rand(n)
-        coeffs = _vals2coeffs(values)
-        _values_ = _coeffs2vals(coeffs)
-        self.assertLessEqual(infnorm(values - _values_), scaled_tol(n))
+# Generate test parameters for vals2coeffs2vals and coeffs2vals2coeffs tests
+test_sizes = 2 ** np.arange(2, 18, 2) + 1
 
-    return asserter
+@pytest.mark.parametrize("n", test_sizes)
+def test_vals2coeffs2vals(n):
+    values = np.random.rand(n)
+    coeffs = _vals2coeffs(values)
+    _values_ = _coeffs2vals(coeffs)
+    assert infnorm(values - _values_) <= scaled_tol(n)
 
-
-def coeffs2vals2coeffsTester(n):
-    def asserter(self):
-        coeffs = np.random.rand(n)
-        values = _coeffs2vals(coeffs)
-        _coeffs_ = _vals2coeffs(values)
-        self.assertLessEqual(infnorm(coeffs - _coeffs_), scaled_tol(n))
-
-    return asserter
-
-
-for k, n in enumerate(2 ** np.arange(2, 18, 2) + 1):
-    # vals2coeffs2vals
-    _testfun_ = vals2coeffs2valsTester(n)
-    _testfun_.__name__ = "test_vals2coeffs2vals_{:02}".format(k)
-    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
-
-    # coeffs2vals2coeffs
-    _testfun_ = coeffs2vals2coeffsTester(n)
-    _testfun_.__name__ = "test_coeffs2vals2coeffs_{:02}".format(k)
-    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
+@pytest.mark.parametrize("n", test_sizes)
+def test_coeffs2vals2coeffs(n):
+    coeffs = np.random.rand(n)
+    values = _coeffs2vals(coeffs)
+    _coeffs_ = _vals2coeffs(values)
+    assert infnorm(coeffs - _coeffs_) <= scaled_tol(n)
 # ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
-# Add second-kind Chebyshev points test cases to ChebyshevPoints
+# Test second-kind Chebyshev points
 # ------------------------------------------------------------------------
-chebpts2_testlist = (
+chebpts2_testlist = [
     (Chebtech2._chebpts(1), np.array([0.0]), eps),
     (Chebtech2._chebpts(2), np.array([-1.0, 1.0]), eps),
     (Chebtech2._chebpts(3), np.array([-1.0, 0.0, 1.0]), eps),
@@ -101,118 +86,126 @@ chebpts2_testlist = (
         np.array([-1.0, -(2.0 ** (-0.5)), 0.0, 2.0 ** (-0.5), 1.0]),
         eps,
     ),
-)
-for k, (a, b, tol) in enumerate(chebpts2_testlist):
-    _testfun_ = infNormLessThanTol(a, b, tol)
-    _testfun_.__name__ = "test_chebpts_{:02}".format(k + 1)
-    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
+]
+
+@pytest.mark.parametrize("a,b,tol", chebpts2_testlist)
+def test_chebpts_values(a, b, tol):
+    assert infnorm(a - b) <= tol
 
 
 # check the output is of the correct length, the endpoint values are -1
 # and 1, respectively, and that the sequence is monotonically increasing
-def chebptsLenTester(k):
-    def asserter(self):
-        pts = Chebtech2._chebpts(k)
-        self.assertEquals(pts.size, k)
-        self.assertEquals(pts[0], -1.0)
-        self.assertEquals(pts[-1], 1.0)
-        self.assertTrue(np.all(np.diff(pts)) > 0)
+chebpts_len_sizes = 2 ** np.arange(2, 18, 2) + 3
 
-    return asserter
-
-
-for k, n in enumerate(2 ** np.arange(2, 18, 2)):
-    _testfun_ = chebptsLenTester(n + 3)
-    _testfun_.__name__ = "test_chebpts_len_{:02}".format(k)
-    setattr(ChebyshevPoints, _testfun_.__name__, _testfun_)
+@pytest.mark.parametrize("k", chebpts_len_sizes)
+def test_chebpts_len(k):
+    pts = Chebtech2._chebpts(k)
+    assert pts.size == k
+    assert pts[0] == -1.0
+    assert pts[-1] == 1.0
+    assert np.all(np.diff(pts) > 0)
 # ------------------------------------------------------------------------
 
 
-class ClassUsage(unittest.TestCase):
-    """Unit-tests for miscelaneous Chebtech2 class usage"""
+@pytest.fixture
+def class_usage_data():
+    return {
+        "ff": Chebtech2.initfun_fixedlen(lambda x: np.sin(30 * x), 100),
+        "xx": -1 + 2 * np.random.rand(100)
+    }
 
-    def setUp(self):
-        self.ff = Chebtech2.initfun_fixedlen(lambda x: np.sin(30 * x), 100)
-        self.xx = -1 + 2 * np.random.rand(100)
+"""Unit-tests for miscelaneous Chebtech2 class usage"""
 
-    # tests for emptiness of Chebtech2 objects
-    def test_isempty_True(self):
-        f = Chebtech2(np.array([]))
-        self.assertTrue(f.isempty)
-        self.assertFalse(not f.isempty)
+# tests for emptiness of Chebtech2 objects
+def test_isempty_True():
+    f = Chebtech2(np.array([]))
+    assert f.isempty
+    assert not (not f.isempty)
 
-    def test_isempty_False(self):
-        f = Chebtech2(np.array([1.0]))
-        self.assertFalse(f.isempty)
-        self.assertTrue(not f.isempty)
+def test_isempty_False():
+    f = Chebtech2(np.array([1.0]))
+    assert not f.isempty
 
-    # tests for constantness of Chebtech2 objects
-    def test_isconst_True(self):
-        f = Chebtech2(np.array([1.0]))
-        self.assertTrue(f.isconst)
-        self.assertFalse(not f.isconst)
+# tests for constantness of Chebtech2 objects
+def test_isconst_True():
+    f = Chebtech2(np.array([1.0]))
+    assert f.isconst
+    assert not (not f.isconst)
 
-    def test_isconst_False(self):
-        f = Chebtech2(np.array([]))
-        self.assertFalse(f.isconst)
-        self.assertTrue(not f.isconst)
+def test_isconst_False():
+    f = Chebtech2(np.array([]))
+    assert not f.isconst
 
-    # check the size() method is working properly
-    def test_size(self):
-        cfs = np.random.rand(10)
-        self.assertEquals(Chebtech2(np.array([])).size, 0)
-        self.assertEquals(Chebtech2(np.array([1.0])).size, 1)
-        self.assertEquals(Chebtech2(cfs).size, cfs.size)
+# check the size() method is working properly
+def test_size():
+    cfs = np.random.rand(10)
+    assert Chebtech2(np.array([])).size == 0
+    assert Chebtech2(np.array([1.0])).size == 1
+    assert Chebtech2(cfs).size == cfs.size
 
-    # test the different permutations of self(xx, ..)
-    def test_call(self):
-        self.ff(self.xx)
+# test the different permutations of self(xx, ..)
+def test_call(class_usage_data):
+    ff = class_usage_data["ff"]
+    xx = class_usage_data["xx"]
+    ff(xx)
 
-    def test_call_bary(self):
-        self.ff(self.xx, "bary")
-        self.ff(self.xx, how="bary")
+def test_call_bary(class_usage_data):
+    ff = class_usage_data["ff"]
+    xx = class_usage_data["xx"]
+    ff(xx, "bary")
+    ff(xx, how="bary")
 
-    def test_call_clenshaw(self):
-        self.ff(self.xx, "clenshaw")
-        self.ff(self.xx, how="clenshaw")
+def test_call_clenshaw(class_usage_data):
+    ff = class_usage_data["ff"]
+    xx = class_usage_data["xx"]
+    ff(xx, "clenshaw")
+    ff(xx, how="clenshaw")
 
-    def test_call_bary_vs_clenshaw(self):
-        b = self.ff(self.xx, "clenshaw")
-        c = self.ff(self.xx, "bary")
-        self.assertLessEqual(infnorm(b - c), 5e1 * eps)
+def test_call_bary_vs_clenshaw(class_usage_data):
+    ff = class_usage_data["ff"]
+    xx = class_usage_data["xx"]
+    b = ff(xx, "clenshaw")
+    c = ff(xx, "bary")
+    assert infnorm(b - c) <= 5e1 * eps
 
-    def test_call_raises(self):
-        self.assertRaises(ValueError, self.ff, self.xx, "notamethod")
-        self.assertRaises(ValueError, self.ff, self.xx, how="notamethod")
+def test_call_raises(class_usage_data):
+    ff = class_usage_data["ff"]
+    xx = class_usage_data["xx"]
+    with pytest.raises(ValueError):
+        ff(xx, "notamethod")
+    with pytest.raises(ValueError):
+        ff(xx, how="notamethod")
 
-    def test_prolong(self):
-        for k in [0, 1, 20, self.ff.size, 200]:
-            self.assertEquals(self.ff.prolong(k).size, k)
+def test_prolong(class_usage_data):
+    ff = class_usage_data["ff"]
+    for k in [0, 1, 20, ff.size, 200]:
+        assert ff.prolong(k).size == k
 
-    def test_vscale_empty(self):
-        gg = Chebtech2(np.array([]))
-        self.assertEquals(gg.vscale, 0.0)
+def test_vscale_empty():
+    gg = Chebtech2(np.array([]))
+    assert gg.vscale == 0.0
 
-    def test_copy(self):
-        ff = self.ff
-        gg = self.ff.copy()
-        self.assertEquals(ff, ff)
-        self.assertEquals(gg, gg)
-        self.assertNotEquals(ff, gg)
-        self.assertEquals(infnorm(ff.coeffs - gg.coeffs), 0)
+def test_copy(class_usage_data):
+    ff = class_usage_data["ff"]
+    gg = ff.copy()
+    assert ff == ff
+    assert gg == gg
+    assert ff != gg
+    assert infnorm(ff.coeffs - gg.coeffs) == 0
 
-    def test_simplify(self):
-        gg = self.ff.simplify()
-        # check that simplify is calling standard_chop underneath
-        self.assertEqual(gg.size, standard_chop(self.ff.coeffs))
-        self.assertEqual(infnorm(self.ff.coeffs[: gg.size] - gg.coeffs), 0)
-        # check we are returned a copy of self's coeffcients by changing
-        # one entry of gg
-        fcfs = self.ff.coeffs
-        gcfs = gg.coeffs
-        self.assertEqual((fcfs[: gg.size] - gcfs).sum(), 0)
-        gg.coeffs[0] = 1
-        self.assertNotEqual((fcfs[: gg.size] - gcfs).sum(), 0)
+def test_simplify(class_usage_data):
+    ff = class_usage_data["ff"]
+    gg = ff.simplify()
+    # check that simplify is calling standard_chop underneath
+    assert gg.size == standard_chop(ff.coeffs)
+    assert infnorm(ff.coeffs[: gg.size] - gg.coeffs) == 0
+    # check we are returned a copy of self's coeffcients by changing
+    # one entry of gg
+    fcfs = ff.coeffs
+    gcfs = gg.coeffs
+    assert (fcfs[: gg.size] - gcfs).sum() == 0
+    gg.coeffs[0] = 1
+    assert (fcfs[: gg.size] - gcfs).sum() != 0
 
 
 # --------------------------------------
@@ -230,118 +223,122 @@ vscales = [
     (lambda x: 0 * x + 1.0, 1, 1),
 ]
 
-
-def vscaleTester(fun, n, vscale):
+@pytest.mark.parametrize("fun,n,vscale", vscales)
+def test_vscale(fun, n, vscale):
     ff = Chebtech2.initfun_fixedlen(fun, n)
-
-    def tester(self):
-        absdiff = abs(ff.vscale - vscale)
-        self.assertLessEqual(absdiff, 0.1 * vscale)
-
-    return tester
-
-
-for k, args in enumerate(vscales):
-    _testfun_ = vscaleTester(*args)
-    _testfun_.__name__ = "test_vscale_{:02}".format(k)
-    setattr(ClassUsage, _testfun_.__name__, _testfun_)
+    absdiff = abs(ff.vscale - vscale)
+    assert absdiff <= 0.1 * vscale
 
 
 plt = import_plt()
 
 
-class Plotting(unittest.TestCase):
-    """Unit-tests for Chebtech2 plotting methods"""
+@pytest.fixture
+def plotting_data():
+    def f(x):
+        return sin(3 * x) + 5e-1 * cos(30 * x)
 
-    def setUp(self):
-        def f(x):
-            return sin(3 * x) + 5e-1 * cos(30 * x)
+    def u(x):
+        return np.exp(2 * np.pi * 1j * x)
 
-        def u(x):
-            return np.exp(2 * np.pi * 1j * x)
-
-        self.f0 = Chebtech2.initfun_fixedlen(f, 100)
-        self.f1 = Chebtech2.initfun_adaptive(f)
-        self.f2 = Chebtech2.initfun_adaptive(u)
-
-    @unittest.skipIf(plt is None, "matplotlib not installed")
-    def test_plot(self):
-        fig, ax = plt.subplots()
-        self.f0.plot(ax=ax)
-
-    @unittest.skipIf(plt is None, "matplotlib not installed")
-    def test_plot_complex(self):
-        fig, ax = plt.subplots()
-        # plot Bernstein ellipses
-        for rho in np.arange(1.1, 2, 0.1):
-            joukowsky(rho * self.f2).plot(ax=ax)
-
-    @unittest.skipIf(plt is None, "matplotlib not installed")
-    def test_plotcoeffs(self):
-        fig, ax = plt.subplots()
-        self.f0.plotcoeffs(ax=ax)
-        self.f1.plotcoeffs(ax=ax, color="r")
+    return {
+        "f0": Chebtech2.initfun_fixedlen(f, 100),
+        "f1": Chebtech2.initfun_adaptive(f),
+        "f2": Chebtech2.initfun_adaptive(u)
+    }
 
 
-class Calculus(unittest.TestCase):
-    """Unit-tests for Chebtech2 calculus operations"""
+"""Unit-tests for Chebtech2 plotting methods"""
 
-    def setUp(self):
-        self.emptyfun = Chebtech2(np.array([]))
+@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
+def test_plot(plotting_data):
+    fig, ax = plt.subplots()
+    plotting_data["f0"].plot(ax=ax)
 
-    # tests for the correct results in the empty cases
-    def test_sum_empty(self):
-        self.assertEqual(self.emptyfun.sum(), 0)
+@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
+def test_plot_complex(plotting_data):
+    fig, ax = plt.subplots()
+    # plot Bernstein ellipses
+    for rho in np.arange(1.1, 2, 0.1):
+        joukowsky(rho * plotting_data["f2"]).plot(ax=ax)
 
-    def test_cumsum_empty(self):
-        self.assertTrue(self.emptyfun.cumsum().isempty)
+@pytest.mark.skipif(plt is None, reason="matplotlib not installed")
+def test_plotcoeffs(plotting_data):
+    fig, ax = plt.subplots()
+    plotting_data["f0"].plotcoeffs(ax=ax)
+    plotting_data["f1"].plotcoeffs(ax=ax, color="r")
 
-    def test_diff_empty(self):
-        self.assertTrue(self.emptyfun.diff().isempty)
+
+@pytest.fixture
+def calculus_data():
+    return {
+        "emptyfun": Chebtech2(np.array([]))
+    }
+
+"""Unit-tests for Chebtech2 calculus operations"""
+
+# tests for the correct results in the empty cases
+def test_sum_empty(calculus_data):
+    emptyfun = calculus_data["emptyfun"]
+    assert emptyfun.sum() == 0
+
+def test_cumsum_empty(calculus_data):
+    emptyfun = calculus_data["emptyfun"]
+    assert emptyfun.cumsum().isempty
+
+def test_diff_empty(calculus_data):
+    emptyfun = calculus_data["emptyfun"]
+    assert emptyfun.diff().isempty
 
 
-class Complex(unittest.TestCase):
-    def setUp(self):
-        self.z = Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
+@pytest.fixture
+def complex_data():
+    return {
+        "z": Chebtech2.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
+    }
 
-    def test_init_empty(self):
-        Chebtech2.initempty()
+def test_init_empty():
+    Chebtech2.initempty()
 
-    def test_roots(self):
-        r0 = self.z.roots()
-        r1 = (self.z - 1).roots()
-        r2 = (self.z - 1j).roots()
-        r3 = (self.z + 1).roots()
-        r4 = (self.z + 1j).roots()
-        self.assertEqual(r0.size, 0)
-        self.assertTrue(np.allclose(r1, [0]))
-        self.assertTrue(np.allclose(r2, [0.5]))
-        self.assertTrue(np.allclose(r3, [-1, 1]))
-        self.assertTrue(np.allclose(r4, [-0.5]))
+def test_roots(complex_data):
+    z = complex_data["z"]
+    r0 = z.roots()
+    r1 = (z - 1).roots()
+    r2 = (z - 1j).roots()
+    r3 = (z + 1).roots()
+    r4 = (z + 1j).roots()
+    assert r0.size == 0
+    assert np.allclose(r1, [0])
+    assert np.allclose(r2, [0.5])
+    assert np.allclose(r3, [-1, 1])
+    assert np.allclose(r4, [-0.5])
 
-    def test_rho_ellipse_construction(self):
-        zz = 1.2 * self.z
-        e = 0.5 * (zz + 1 / zz)
-        self.assertAlmostEqual(e(1) - e(-1), 0, places=14)
-        self.assertAlmostEqual(e(0) + e(-1), 0, places=14)
-        self.assertAlmostEqual(e(0) + e(1), 0, places=14)
+def test_rho_ellipse_construction(complex_data):
+    z = complex_data["z"]
+    zz = 1.2 * z
+    e = 0.5 * (zz + 1 / zz)
+    assert abs(e(1) - e(-1)) < 1e-14
+    assert abs(e(0) + e(-1)) < 1e-14
+    assert abs(e(0) + e(1)) < 1e-14
 
-    def test_calculus(self):
-        self.assertTrue(np.allclose([self.z.sum()], [0]))
-        self.assertTrue((self.z.cumsum().diff() - self.z).size, 1)
-        self.assertTrue((self.z - self.z.cumsum().diff()).size, 1)
+def test_calculus(complex_data):
+    z = complex_data["z"]
+    assert np.allclose([z.sum()], [0])
+    assert (z.cumsum().diff() - z).size == 1
+    assert (z - z.cumsum().diff()).size == 1
 
-    def test_real_imag(self):
-        # ceck definition of real and imaginary
-        zreal = self.z.real()
-        zimag = self.z.imag()
-        np.testing.assert_equal(zreal.coeffs, np.real(self.z.coeffs))
-        np.testing.assert_equal(zimag.coeffs, np.imag(self.z.coeffs))
-        # check real part of real chebtech is the same chebtech
-        self.assertTrue(zreal.real() == zreal)
-        # check imaginary part of real chebtech is the zero chebtech
-        self.assertTrue(zreal.imag().isconst)
-        self.assertTrue(zreal.imag().coeffs[0] == 0)
+def test_real_imag(complex_data):
+    z = complex_data["z"]
+    # check definition of real and imaginary
+    zreal = z.real()
+    zimag = z.imag()
+    np.testing.assert_equal(zreal.coeffs, np.real(z.coeffs))
+    np.testing.assert_equal(zimag.coeffs, np.imag(z.coeffs))
+    # check real part of real chebtech is the same chebtech
+    assert zreal.real() == zreal
+    # check imaginary part of real chebtech is the zero chebtech
+    assert zreal.imag().isconst
+    assert zreal.imag().coeffs[0] == 0
 
 
 # --------------------------------------
@@ -360,21 +357,11 @@ def_integrals = [
     (lambda x: 0 * x + 1.0, 1, 2, eps),
 ]
 
-
-def definiteIntegralTester(fun, n, integral, tol):
+@pytest.mark.parametrize("fun,n,integral,tol", def_integrals)
+def test_definite_integral(fun, n, integral, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
-
-    def tester(self):
-        absdiff = abs(ff.sum() - integral)
-        self.assertLessEqual(absdiff, tol)
-
-    return tester
-
-
-for k, (fun, n, integral, tol) in enumerate(def_integrals):
-    _testfun_ = definiteIntegralTester(fun, n, integral, tol)
-    _testfun_.__name__ = "test_sum_{:02}".format(k)
-    setattr(Calculus, _testfun_.__name__, _testfun_)
+    absdiff = abs(ff.sum() - integral)
+    assert absdiff <= tol
 
 # --------------------------------------
 #          indefinite integrals
@@ -393,24 +380,15 @@ indef_integrals = [
     (lambda x: 1e10 * exp(x), lambda x: 1e10 * exp(x), 16, 1e10 * (3 * eps)),
 ]
 
-
-def indefiniteIntegralTester(fun, dfn, n, tol):
+@pytest.mark.parametrize("fun,dfn,n,tol", indef_integrals)
+def test_indefinite_integral(fun, dfn, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(dfn, n + 1)
     coeffs = gg.coeffs
     coeffs[0] = coeffs[0] - dfn(np.array([-1]))
 
-    def tester(self):
-        absdiff = infnorm(ff.cumsum().coeffs - coeffs)
-        self.assertLessEqual(absdiff, tol)
-
-    return tester
-
-
-for k, (fun, dfn, n, tol) in enumerate(indef_integrals):
-    _testfun_ = indefiniteIntegralTester(fun, dfn, n, tol)
-    _testfun_.__name__ = "test_cumsum_{:02}".format(k)
-    setattr(Calculus, _testfun_.__name__, _testfun_)
+    absdiff = infnorm(ff.cumsum().coeffs - coeffs)
+    assert absdiff <= tol
 
 # --------------------------------------
 #            derivatives
@@ -429,301 +407,264 @@ derivatives = [
     (lambda x: 1e10 * exp(x), lambda x: 1e10 * exp(x), 16, 1e10 * 2e2 * eps),
 ]
 
-
-def derivativeTester(fun, der, n, tol):
+@pytest.mark.parametrize("fun,der,n,tol", derivatives)
+def test_derivative(fun, der, n, tol):
     ff = Chebtech2.initfun_fixedlen(fun, n)
     gg = Chebtech2.initfun_fixedlen(der, max(n - 1, 1))
 
-    def tester(self):
-        absdiff = infnorm(ff.diff().coeffs - gg.coeffs)
-        self.assertLessEqual(absdiff, tol)
-
-    return tester
+    absdiff = infnorm(ff.diff().coeffs - gg.coeffs)
+    assert absdiff <= tol
 
 
-for k, (fun, der, n, tol) in enumerate(derivatives):
-    _testfun_ = derivativeTester(fun, der, n, tol)
-    _testfun_.__name__ = "test_diff_{:02}".format(k)
-    setattr(Calculus, _testfun_.__name__, _testfun_)
+"""Unit-tests for construction of Chebtech2 objects"""
 
-
-class Construction(unittest.TestCase):
-    """Unit-tests for construction of Chebtech2 objects"""
-
-    # TODO: expand to all the constructor variants
-    def test_initvalues(self):
-        # test n = 0 case separately
-        vals = np.random.rand(0)
+# TODO: expand to all the constructor variants
+def test_initvalues():
+    # test n = 0 case separately
+    vals = np.random.rand(0)
+    fun = Chebtech2.initvalues(vals)
+    cfs = Chebtech2._vals2coeffs(vals)
+    assert fun.coeffs.size == cfs.size == 0
+    # now test the other cases
+    for n in range(1, 10):
+        vals = np.random.rand(n)
         fun = Chebtech2.initvalues(vals)
         cfs = Chebtech2._vals2coeffs(vals)
-        self.assertTrue(fun.coeffs.size == cfs.size == 0)
-        # now test the other cases
-        for n in range(1, 10):
-            vals = np.random.rand(n)
-            fun = Chebtech2.initvalues(vals)
-            cfs = Chebtech2._vals2coeffs(vals)
-            self.assertEqual(infnorm(fun.coeffs - cfs), 0.0)
+        assert infnorm(fun.coeffs - cfs) == 0.0
 
-    def test_initidentity(self):
-        x = Chebtech2.initidentity()
-        s = -1 + 2 * np.random.rand(10000)
-        self.assertEqual(infnorm(s - x(s)), 0.0)
+def test_initidentity():
+    x = Chebtech2.initidentity()
+    s = -1 + 2 * np.random.rand(10000)
+    assert infnorm(s - x(s)) == 0.0
 
-    def test_coeff_construction(self):
-        coeffs = np.random.rand(10)
-        f = Chebtech2(coeffs)
-        self.assertIsInstance(f, Chebtech2)
-        self.assertLess(infnorm(f.coeffs - coeffs), eps)
+def test_coeff_construction():
+    coeffs = np.random.rand(10)
+    f = Chebtech2(coeffs)
+    assert isinstance(f, Chebtech2)
+    assert infnorm(f.coeffs - coeffs) < eps
 
-    def test_const_construction(self):
-        ff = Chebtech2.initconst(1.0)
-        self.assertEquals(ff.size, 1)
-        self.assertTrue(ff.isconst)
-        self.assertFalse(ff.isempty)
-        self.assertRaises(ValueError, Chebtech2.initconst, [1.0])
+def test_const_construction():
+    ff = Chebtech2.initconst(1.0)
+    assert ff.size == 1
+    assert ff.isconst
+    assert not ff.isempty
+    with pytest.raises(ValueError):
+        Chebtech2.initconst([1.0])
 
-    def test_empty_construction(self):
-        ff = Chebtech2.initempty()
-        self.assertEquals(ff.size, 0)
-        self.assertFalse(ff.isconst)
-        self.assertTrue(ff.isempty)
-        self.assertRaises(TypeError, Chebtech2.initempty, [1.0])
+def test_empty_construction():
+    ff = Chebtech2.initempty()
+    assert ff.size == 0
+    assert not ff.isconst
+    assert ff.isempty
+    with pytest.raises(TypeError):
+        Chebtech2.initempty([1.0])
 
 
-def adaptiveTester(fun, funlen):
+# Test adaptive function initialization
+@pytest.mark.parametrize("fun,funlen,_", testfunctions)
+def test_adaptive(fun, funlen, _):
     ff = Chebtech2.initfun_adaptive(fun)
+    assert ff.size - funlen <= 2
+    assert ff.size - funlen > -1
 
-    def tester(self):
-        self.assertLessEqual(ff.size - funlen, 2)
-        self.assertGreater(ff.size - funlen, -1)
-
-    return tester
-
-
-def fixedlenTester(fun, n):
+# Test fixed length function initialization
+@pytest.mark.parametrize("fun,funlen,_", testfunctions)
+@pytest.mark.parametrize("n", [50, 500])
+def test_fixedlen(fun, funlen, _, n):
     ff = Chebtech2.initfun_fixedlen(fun, n)
-
-    def tester(self):
-        self.assertEquals(ff.size, n)
-
-    return tester
+    assert ff.size == n
 
 
-for fun, funlen, _ in testfunctions:
-    # add the adaptive tests
-    _testfun_ = adaptiveTester(fun, funlen)
-    _testfun_.__name__ = "test_adaptive_{}".format(fun.__name__)
-    setattr(Construction, _testfun_.__name__, _testfun_)
+@pytest.fixture
+def algebra_data():
+    return {
+        "xx": -1 + 2 * np.random.rand(1000),
+        "emptyfun": Chebtech2.initempty()
+    }
 
-    # add the fixedlen tests
-    for n in np.array([50, 500]):
-        _testfun_ = fixedlenTester(fun, n)
-        _testfun_.__name__ = "test_fixedlen_{}_{:003}pts".format(fun.__name__, n)
-        setattr(Construction, _testfun_.__name__, _testfun_)
+"""Unit-tests for Chebtech2 algebraic operations"""
 
+# check (empty Chebtech) + (Chebtech) = (empty Chebtech)
+#   and (Chebtech) + (empty Chebtech) = (empty Chebtech)
+def test__add__radd__empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for fun, funlen, _ in testfunctions:
+        chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+        assert (emptyfun + chebtech).isempty
+        assert (chebtech + emptyfun).isempty
 
-class Algebra(unittest.TestCase):
-    """Unit-tests for Chebtech2 algebraic operations"""
+# check the output of (constant + Chebtech)
+#                 and (Chebtech + constant)
+def test__add__radd__constant(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen, _ in testfunctions:
+        for const in (-1, 1, 10, -1e5):
 
-    def setUp(self):
-        self.xx = -1 + 2 * np.random.rand(1000)
-        self.emptyfun = Chebtech2.initempty()
+            def f(x):
+                return const + fun(x)
 
-    # check (empty Chebtech) + (Chebtech) = (empty Chebtech)
-    #   and (Chebtech) + (empty Chebtech) = (empty Chebtech)
-    def test__add__radd__empty(self):
-        for fun, funlen, _ in testfunctions:
-            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun + chebtech).isempty)
-            self.assertTrue((chebtech + self.emptyfun).isempty)
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            f1 = const + techfun
+            f2 = techfun + const
+            tol = 5e1 * eps * abs(const)
+            assert infnorm(f(xx) - f1(xx)) <= tol
+            assert infnorm(f(xx) - f2(xx)) <= tol
 
-    # check the output of (constant + Chebtech)
-    #                 and (Chebtech + constant)
-    def test__add__radd__constant(self):
-        xx = self.xx
-        for fun, funlen, _ in testfunctions:
-            for const in (-1, 1, 10, -1e5):
+# check the output of (Chebtech - Chebtech)
+def test__add__negself(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen, _ in testfunctions:
+        chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+        chebzero = chebtech - chebtech
+        assert chebzero.isconst
+        assert infnorm(chebzero(xx)) == 0
 
-                def f(x):
-                    return const + fun(x)
+# check (empty Chebtech) - (Chebtech) = (empty Chebtech)
+#   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
+def test__sub__rsub__empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for fun, funlen, _ in testfunctions:
+        chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+        assert (emptyfun - chebtech).isempty
+        assert (chebtech - emptyfun).isempty
 
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                f1 = const + techfun
-                f2 = techfun + const
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual(infnorm(f(xx) - f1(xx)), tol)
-                self.assertLessEqual(infnorm(f(xx) - f2(xx)), tol)
+# check the output of constant - Chebtech
+#                 and Chebtech - constant
+def test__sub__rsub__constant(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen, _ in testfunctions:
+        for const in (-1, 1, 10, -1e5):
 
-    # check the output of (Chebtech - Chebtech)
-    def test__add__negself(self):
-        xx = self.xx
-        for fun, funlen, _ in testfunctions:
-            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            chebzero = chebtech - chebtech
-            self.assertTrue(chebzero.isconst)
-            self.assertEqual(infnorm(chebzero(xx)), 0)
+            def f(x):
+                return const - fun(x)
 
-    # check (empty Chebtech) - (Chebtech) = (empty Chebtech)
-    #   and (Chebtech) - (empty Chebtech) = (empty Chebtech)
-    def test__sub__rsub__empty(self):
-        for fun, funlen, _ in testfunctions:
-            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun - chebtech).isempty)
-            self.assertTrue((chebtech - self.emptyfun).isempty)
+            def g(x):
+                return fun(x) - const
 
-    # check the output of constant - Chebtech
-    #                 and Chebtech - constant
-    def test__sub__rsub__constant(self):
-        xx = self.xx
-        for fun, funlen, _ in testfunctions:
-            for const in (-1, 1, 10, -1e5):
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            ff = const - techfun
+            gg = techfun - const
+            tol = 5e1 * eps * abs(const)
+            assert infnorm(f(xx) - ff(xx)) <= tol
+            assert infnorm(g(xx) - gg(xx)) <= tol
 
-                def f(x):
-                    return const - fun(x)
+# check (empty Chebtech) * (Chebtech) = (empty Chebtech)
+#   and (Chebtech) * (empty Chebtech) = (empty Chebtech)
+def test__mul__rmul__empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for fun, funlen, _ in testfunctions:
+        chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+        assert (emptyfun * chebtech).isempty
+        assert (chebtech * emptyfun).isempty
 
-                def g(x):
-                    return fun(x) - const
+# check the output of constant * Chebtech
+#                 and Chebtech * constant
+def test__mul__rmul__constant(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen, _ in testfunctions:
+        for const in (-1, 1, 10, -1e5):
 
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                ff = const - techfun
-                gg = techfun - const
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
-                self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
+            def f(x):
+                return const * fun(x)
 
-    # check (empty Chebtech) * (Chebtech) = (empty Chebtech)
-    #   and (Chebtech) * (empty Chebtech) = (empty Chebtech)
-    def test__mul__rmul__empty(self):
-        for fun, funlen, _ in testfunctions:
-            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue((self.emptyfun * chebtech).isempty)
-            self.assertTrue((chebtech * self.emptyfun).isempty)
+            def g(x):
+                return fun(x) * const
 
-    # check the output of constant * Chebtech
-    #                 and Chebtech * constant
-    def test__mul__rmul__constant(self):
-        xx = self.xx
-        for fun, funlen, _ in testfunctions:
-            for const in (-1, 1, 10, -1e5):
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            ff = const * techfun
+            gg = techfun * const
+            tol = 5e1 * eps * abs(const)
+            assert infnorm(f(xx) - ff(xx)) <= tol
+            assert infnorm(g(xx) - gg(xx)) <= tol
 
-                def f(x):
-                    return const * fun(x)
+# check (empty Chebtech) / (Chebtech) = (empty Chebtech)
+#   and (Chebtech) / (empty Chebtech) = (empty Chebtech)
+def test_truediv_empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for fun, funlen, _ in testfunctions:
+        chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
+        assert operator.truediv(emptyfun, chebtech).isempty
+        assert operator.truediv(chebtech, emptyfun).isempty
+        # __truediv__
+        assert (emptyfun / chebtech).isempty
+        assert (chebtech / emptyfun).isempty
 
-                def g(x):
-                    return fun(x) * const
+# check the output of constant / Chebtech
+#                 and Chebtech / constant
+# this tests truediv, __rdiv__, __truediv__, __rtruediv__, since
+# from __future__ import division is executed at the top of the file
+# TODO: find a way to test truediv and  __truediv__ genuinely separately
+def test_truediv_constant(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen, hasRoots in testfunctions:
+        for const in (-1, 1, 10, -1e5):
 
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                ff = const * techfun
-                gg = techfun * const
-                tol = 5e1 * eps * abs(const)
-                self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
-                self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
+            def f(x):
+                return const / fun(x)
 
-    # check (empty Chebtech) / (Chebtech) = (empty Chebtech)
-    #   and (Chebtech) / (empty Chebtech) = (empty Chebtech)
-    def test_truediv_empty(self):
-        for fun, funlen, _ in testfunctions:
-            chebtech = Chebtech2.initfun_fixedlen(fun, funlen)
-            self.assertTrue(operator.truediv(self.emptyfun, chebtech).isempty)
-            self.assertTrue(operator.truediv(chebtech, self.emptyfun).isempty)
-            # __truediv__
-            self.assertTrue((self.emptyfun / chebtech).isempty)
-            self.assertTrue((chebtech / self.emptyfun).isempty)
+            def g(x):
+                return fun(x) / const
 
-    # check the output of constant / Chebtech
-    #                 and Chebtech / constant
-    # this tests truediv, __rdiv__, __truediv__, __rtruediv__, since
-    # from __future__ import division is executed at the top of the file
-    # TODO: find a way to test truediv and  __truediv__ genuinely separately
-    def test_truediv_constant(self):
-        xx = self.xx
-        for fun, funlen, hasRoots in testfunctions:
-            for const in (-1, 1, 10, -1e5):
+            tol = eps * abs(const)
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            gg = techfun / const
+            assert infnorm(g(xx) - gg(xx)) <= 2 * gg.size * tol
+            # don't do the following test for functions with roots
+            if not hasRoots:
+                ff = const / techfun
+                assert infnorm(f(xx) - ff(xx)) <= 3 * ff.size * tol
 
-                def f(x):
-                    return const / fun(x)
+# check    +(empty Chebtech) = (empty Chebtech)
+def test__pos__empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    assert (+emptyfun).isempty
 
-                def g(x):
-                    return fun(x) / const
+# check -(empty Chebtech) = (empty Chebtech)
+def test__neg__empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    assert (-emptyfun).isempty
 
-                tol = eps * abs(const)
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                gg = techfun / const
-                self.assertLessEqual(infnorm(g(xx) - gg(xx)), 2 * gg.size * tol)
-                # don't do the following test for functions with roots
-                if not hasRoots:
-                    ff = const / techfun
-                    self.assertLessEqual(infnorm(f(xx) - ff(xx)), 3 * ff.size * tol)
+def test_pow_empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for c in range(10):
+        assert (emptyfun**c).isempty
 
-    # check    +(empty Chebtech) = (empty Chebtech)
-    def test__pos__empty(self):
-        self.assertTrue((+self.emptyfun).isempty)
+def test_rpow_empty(algebra_data):
+    emptyfun = algebra_data["emptyfun"]
+    for c in range(10):
+        assert (c**emptyfun).isempty
 
-    # check -(empty Chebtech) = (empty Chebtech)
-    def test__neg__empty(self):
-        self.assertTrue((-self.emptyfun).isempty)
+# check the output of Chebtech ** constant
+#                 and constant ** Chebtech
+def test_pow_const(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
+        for c in (1, 2):
 
-    def test_pow_empty(self):
-        for c in range(10):
-            self.assertTrue((self.emptyfun**c).isempty)
+            def f(x):
+                return fun(x) ** c
 
-    def test_rpow_empty(self):
-        for c in range(10):
-            self.assertTrue((c**self.emptyfun).isempty)
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            ff = techfun**c
+            tol = 2e1 * eps * abs(c)
+            assert infnorm(f(xx) - ff(xx)) <= tol
 
-    # check the output of Chebtech ** constant
-    #                 and constant ** Chebtech
-    def test_pow_const(self):
-        xx = self.xx
-        for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
-            for c in (1, 2):
+def test_rpow_const(algebra_data):
+    xx = algebra_data["xx"]
+    for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
+        for c in (1, 2):
 
-                def f(x):
-                    return fun(x) ** c
+            def g(x):
+                return c ** fun(x)
 
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                ff = techfun**c
-                tol = 2e1 * eps * abs(c)
-                self.assertLessEqual(infnorm(f(xx) - ff(xx)), tol)
-
-    def test_rpow_const(self):
-        xx = self.xx
-        for fun, funlen in [(np.sin, 15), (np.exp, 15)]:
-            for c in (1, 2):
-
-                def g(x):
-                    return c ** fun(x)
-
-                techfun = Chebtech2.initfun_fixedlen(fun, funlen)
-                gg = c**techfun
-                tol = 2e1 * eps * abs(c)
-                self.assertLessEqual(infnorm(g(xx) - gg(xx)), tol)
+            techfun = Chebtech2.initfun_fixedlen(fun, funlen)
+            gg = c**techfun
+            tol = 2e1 * eps * abs(c)
+            assert infnorm(g(xx) - gg(xx)) <= tol
 
 
-# add tests for the binary operators
-def binaryOpTester(f, g, binop, nf, ng):
-    ff = Chebtech2.initfun_fixedlen(f, nf)
-    gg = Chebtech2.initfun_fixedlen(g, ng)
-
-    def FG(x):
-        return binop(f(x), g(x))
-
-    fg = binop(ff, gg)
-
-    def tester(self):
-        vscl = max([ff.vscale, gg.vscale])
-        lscl = max([ff.size, gg.size])
-        self.assertLessEqual(infnorm(fg(self.xx) - FG(self.xx)), 3 * vscl * lscl * eps)
-        if binop is operator.mul:
-            # check simplify is not being called in __mul__
-            self.assertEqual(fg.size, ff.size + gg.size - 1)
-
-    return tester
-
-
-# note: defining __radd__(a,b) = operator.add(b,a) and feeding this into the
-# test will not in fact test the __radd__ functionality of the class. These
-# test need to be added manually to the class.
+# Generate test parameters for binary operators
+binary_op_params = []
 binops = (operator.add, operator.mul, operator.sub, operator.truediv)
 for binop in binops:
     # add generic binary operator tests
@@ -732,26 +673,49 @@ for binop in binops:
             # skip truediv test if the denominator has roots
             pass
         else:
-            _testfun_ = binaryOpTester(f, g, binop, nf, ng)
-            _testfun_.__name__ = "test_{}_{}_{}".format(
-                binop.__name__, f.__name__, g.__name__
-            )
-            setattr(Algebra, _testfun_.__name__, _testfun_)
+            binary_op_params.append((f, g, binop, nf, ng, f.__name__, g.__name__, binop.__name__))
 
+# Add power operator tests
 powtestfuns = (
     [(np.exp, 15, "exp"), (np.sin, 15, "sin")],
     [(np.exp, 15, "exp"), (lambda x: 2 - x, 2, "linear")],
     [(lambda x: 2 - x, 2, "linear"), (np.exp, 15, "exp")],
 )
-# add operator.power tests
 for (f, nf, namef), (g, ng, nameg) in powtestfuns:
-    _testfun_ = binaryOpTester(f, g, operator.pow, nf, ng)
-    _testfun_.__name__ = "test_{}_{}_{}".format("pow", namef, nameg)
-    setattr(Algebra, _testfun_.__name__, _testfun_)
+    binary_op_params.append((f, g, operator.pow, nf, ng, namef, nameg, "pow"))
+
+# Test binary operators
+@pytest.mark.parametrize("f,g,binop,nf,ng,fname,gname,binopname", binary_op_params)
+def test_binary_operators(f, g, binop, nf, ng, fname, gname, binopname, algebra_data):
+    xx = algebra_data["xx"]
+    ff = Chebtech2.initfun_fixedlen(f, nf)
+    gg = Chebtech2.initfun_fixedlen(g, ng)
+
+    def FG(x):
+        return binop(f(x), g(x))
+
+    fg = binop(ff, gg)
+
+    vscl = max([ff.vscale, gg.vscale])
+    lscl = max([ff.size, gg.size])
+    assert infnorm(fg(xx) - FG(xx)) <= 3 * vscl * lscl * eps
+
+    if binop is operator.mul:
+        # check simplify is not being called in __mul__
+        assert fg.size == ff.size + gg.size - 1
 
 
-# add tests for the unary operators
-def unaryOpTester(unaryop, f, nf):
+# Generate test parameters for unary operators
+unary_op_params = []
+unaryops = (operator.pos, operator.neg)
+for unaryop in unaryops:
+    for f, nf, _ in testfunctions:
+        unary_op_params.append((unaryop, f, nf, unaryop.__name__, f.__name__))
+
+# Test unary operators
+@pytest.mark.parametrize("unaryop,f,nf,unaryopname,fname", unary_op_params)
+def test_unary_operators(unaryop, f, nf, unaryopname, fname, algebra_data):
+    xx = algebra_data["xx"]
     ff = Chebtech2.initfun_fixedlen(f, nf)
 
     def gg(x):
@@ -759,44 +723,22 @@ def unaryOpTester(unaryop, f, nf):
 
     GG = unaryop(ff)
 
-    def tester(self):
-        self.assertLessEqual(infnorm(gg(self.xx) - GG(self.xx)), 4e1 * eps)
-
-    return tester
+    assert infnorm(gg(xx) - GG(xx)) <= 4e1 * eps
 
 
-unaryops = (operator.pos, operator.neg)
-for unaryop in unaryops:
-    for f, nf, _ in testfunctions:
-        _testfun_ = unaryOpTester(unaryop, f, nf)
-        _testfun_.__name__ = "test_{}_{}".format(unaryop.__name__, f.__name__)
-        setattr(Algebra, _testfun_.__name__, _testfun_)
+def test_roots_empty():
+    ff = Chebtech2.initempty()
+    assert ff.roots().size == 0
+
+def test_roots_const():
+    ff = Chebtech2.initconst(0.0)
+    gg = Chebtech2.initconst(2.0)
+    assert ff.roots().size == 0
+    assert gg.roots().size == 0
 
 
-class Roots(unittest.TestCase):
-    def test_empty(self):
-        ff = Chebtech2.initempty()
-        self.assertEquals(ff.roots().size, 0)
-
-    def test_const(self):
-        ff = Chebtech2.initconst(0.0)
-        gg = Chebtech2.initconst(2.0)
-        self.assertEquals(ff.roots().size, 0)
-        self.assertEquals(gg.roots().size, 0)
-
-
-# add tests for roots
-def rootsTester(f, roots, tol):
-    ff = Chebtech2.initfun_adaptive(f)
-    rts = ff.roots()
-
-    def tester(self):
-        self.assertLessEqual(infnorm(rts - roots), tol)
-
-    return tester
-
-
-rootstestfuns = (
+# Test roots
+rootstestfuns = [
     (lambda x: 3 * x + 2.0, np.array([-2 / 3]), 1 * eps),
     (lambda x: x**2, np.array([0.0, 0.0]), 1 * eps),
     (lambda x: x**2 + 0.2 * x - 0.08, np.array([-0.4, 0.2]), 1 * eps),
@@ -804,12 +746,10 @@ rootstestfuns = (
     (lambda x: cos(2 * pi * x), np.array([-0.75, -0.25, 0.25, 0.75]), 1 * eps),
     (lambda x: sin(100 * pi * x), np.linspace(-1, 1, 201), 1 * eps),
     (lambda x: sin(5 * pi / 2 * x), np.array([-0.8, -0.4, 0, 0.4, 0.8]), 1 * eps),
-)
+]
 
-for k, args in enumerate(rootstestfuns):
-    _testfun_ = rootsTester(*args)
-    _testfun_.__name__ = "test_roots_{}".format(k)
-    setattr(Roots, _testfun_.__name__, _testfun_)
-
-# reset the testsfun variable so it doesn't get picked up by nose
-_testfun_ = None
+@pytest.mark.parametrize("f,roots,tol", rootstestfuns)
+def test_roots(f, roots, tol):
+    ff = Chebtech2.initfun_adaptive(f)
+    rts = ff.roots()
+    assert infnorm(rts - roots) <= tol
