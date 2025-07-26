@@ -1,4 +1,4 @@
-import unittest
+import pytest
 
 from chebpy import UserPreferences
 from chebpy.core.settings import _preferences
@@ -10,26 +10,26 @@ def userPref(name):
     return getattr(_preferences, name)
 
 
-class Settings(unittest.TestCase):
-    def test_update_pref(self):
-        eps_new = 1e-3
-        eps_old = userPref("eps")
-        with UserPreferences() as prefs:
-            prefs.eps = eps_new
-            self.assertEqual(eps_new, userPref("eps"))
-        self.assertEqual(eps_old, userPref("eps"))
+def test_update_pref():
+    eps_new = 1e-3
+    eps_old = userPref("eps")
+    with UserPreferences() as prefs:
+        prefs.eps = eps_new
+        assert eps_new == userPref("eps")
+    assert eps_old == userPref("eps")
 
-    def test_reset(self):
-        def change(reset_named=False):
-            prefs = UserPreferences()
-            prefs.eps = 99
-            if reset_named:
-                prefs.reset("eps")
-            else:
-                prefs.reset()
 
-        eps_bak = userPref("eps")
-        change(False)
-        self.assertEqual(eps_bak, userPref("eps"))
-        change(True)
-        self.assertEqual(eps_bak, userPref("eps"))
+def test_reset():
+    def change(reset_named=False):
+        prefs = UserPreferences()
+        prefs.eps = 99
+        if reset_named:
+            prefs.reset("eps")
+        else:
+            prefs.reset()
+
+    eps_bak = userPref("eps")
+    change(False)
+    assert eps_bak == userPref("eps")
+    change(True)
+    assert eps_bak == userPref("eps")
