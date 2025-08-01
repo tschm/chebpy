@@ -41,20 +41,20 @@ class Bndfun(BaseFun):
 
     @classmethod
     def initfun(cls, f, interval=None, n=None):
-        """Initialize from a callable function.
+        """Initialize a Bndfun from a callable function.
 
-        This is a general constructor that delegates to either initfun_adaptive
-        or initfun_fixedlen based on the provided parameters.
+        This constructor automatically selects between the adaptive or fixed-length
+        constructor based on the input arguments passed.
 
         Args:
             f (callable): The function to be approximated.
-            interval: The interval on which to define the function.
-                If None, the standard interval [-1, 1] is used.
-            n (int, optional): If provided, specifies the number of points to use.
-                If None, determines the number adaptively.
+            interval (array-like, optional): The interval on which to define the function.
+                Defaults to None, which uses the default interval from preferences.
+            n (int, optional): The number of degrees of freedom to use. If None,
+                uses adaptive construction. Defaults to None.
 
         Returns:
-            BaseFun: A new instance representing the function f.
+            Bndfun: A new instance representing the function.
         """
         if n is None:
             return cls.initfun_adaptive(f, interval)
