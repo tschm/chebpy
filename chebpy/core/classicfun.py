@@ -17,7 +17,6 @@ from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
 
-
 techdict = {
     "Chebtech": Chebtech,
 }
