@@ -25,7 +25,6 @@ import pytest
 
 from chebpy.core.bndfun import Bndfun
 from chebpy.core.chebfun import Chebfun
-from chebpy.core.chebtech import Chebtech
 from chebpy.core.utilities import Interval
 
 if os.environ.get("CI") == "true":  # pragma: no cover
@@ -118,8 +117,6 @@ def emptyfun(request):
         fun = Bndfun.initempty()
     elif "chebfun" in module_name:
         fun = Chebfun.initempty()
-    elif "chebtech" in module_name:
-        fun = Chebtech.initempty()
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initempty()
@@ -155,8 +152,6 @@ def constfun(request):
         fun = Bndfun.initconst(1.0, Interval())
     elif "chebfun" in module_name:
         fun = Chebfun.initconst(1.0)
-    elif "chebtech" in module_name:
-        fun = Chebtech.initconst(1.0)
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initconst(1.0)
@@ -191,8 +186,6 @@ def complexfun(request):
         fun = Bndfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), Interval(-1, 1))
     elif "chebfun" in module_name:
         fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
-    elif "chebtech" in module_name:
-        fun = Chebtech.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x))
     else:
         # Default to Chebfun if the module name doesn't match any specific type
         fun = Chebfun.initfun_adaptive(lambda x: np.exp(np.pi * 1j * x), [-1, 1])
@@ -207,7 +200,7 @@ def complexfun(request):
 @dataclasses.dataclass(frozen=True)
 class TestFunction:
     """Container for test functions."""
-    cheb: Chebfun | Chebtech | Bndfun
+    cheb: Chebfun | Bndfun
     raw: callable
     degree: int
     has_roots: bool
@@ -237,12 +230,5 @@ def ttt(request, testfunctions):
                 TestFunction(cheb=chebfun, raw=fun, degree=degree, has_roots=roots)
             )
 
-    if "chebtech" in module_name:
-        for fun, degree, roots in testfunctions:
-            chebtech = Chebtech.initfun_adaptive(fun)
-            chebtech.name = fun.__name__
-            t_functions.append(
-                TestFunction(cheb=chebtech, raw=fun, degree=degree, has_roots=roots)
-            )
     return t_functions
 
