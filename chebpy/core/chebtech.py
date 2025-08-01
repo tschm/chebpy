@@ -32,14 +32,14 @@ from .algorithms import (
     standard_chop,
     vals2coeffs2,
 )
+from .basefun import BaseFun
 from .decorators import self_empty
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
-from .onefun import Onefun
 from .utilities import Interval, coerce_list
 
 
-class Chebtech(Onefun):
+class Chebtech(BaseFun):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
@@ -590,3 +590,40 @@ class Chebtech(Onefun):
         """
         ax = ax or plt.gca()
         return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
+
+    def restrict(self, subinterval):
+        """Restrict this function to a subinterval.
+
+        This method creates a new function that is the restriction of this function
+        to the specified subinterval. The output is formed using a fixed length
+        construction with the same number of degrees of freedom as the original function.
+
+        Args:
+            subinterval (array-like): The subinterval to which this function should be restricted.
+                Must be contained within the interval [-1, 1].
+
+        Returns:
+            Chebtech: A new function representing the restriction of this function to the subinterval.
+
+        Raises:
+            NotSubinterval: If the subinterval is not contained within [-1, 1].
+        """
+        from .exceptions import NotSubinterval
+
+        interval = Interval(-1, 1)
+        subinterval = Interval(*subinterval)
+
+        if subinterval not in interval:
+            raise NotSubinterval(interval, subinterval)
+        if interval == subinterval:
+            return self
+        else:
+            # Create a function that evaluates self at points mapped from [-1, 1] to subinterval
+            a, b = subinterval
+            def restricted_fun(x):
+                # Map points from [-1, 1] to subinterval
+                mapped_x = 0.5 * (b - a) * x + 0.5 * (b + a)
+                return self(mapped_x)
+
+            # Create a new Chebtech with the same number of degrees of freedom
+            return self.__class__.initfun_fixedlen(restricted_fun, self.size, interval=self.interval)
