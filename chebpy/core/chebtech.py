@@ -32,14 +32,14 @@ from .algorithms import (
     standard_chop,
     vals2coeffs2,
 )
+from .basefun import BaseFun
 from .decorators import self_empty
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
-from .onefun import Onefun
 from .utilities import Interval, coerce_list
 
 
-class Chebtech(Onefun):
+class Chebtech(BaseFun):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much

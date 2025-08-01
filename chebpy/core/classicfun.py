@@ -9,20 +9,21 @@ from abc import ABC
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .basefun import BaseFun
 from .chebtech import Chebtech
 from .decorators import self_empty
 from .exceptions import IntervalMismatch, NotSubinterval
-from .fun import Fun
 from .plotting import plotfun
 from .settings import _preferences as prefs
 from .utilities import Interval
+
 
 techdict = {
     "Chebtech": Chebtech,
 }
 
 
-class Classicfun(Fun, ABC):
+class Classicfun(BaseFun, ABC):
     """Abstract base class for functions defined on arbitrary intervals using a mapped representation.
 
     This class implements the Fun interface for functions defined on arbitrary intervals
