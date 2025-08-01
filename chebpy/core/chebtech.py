@@ -16,8 +16,6 @@ These classes are primarily used internally by higher-level classes like Bndfun
 and Chebfun, rather than being used directly by end users.
 """
 
-from abc import ABC
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -41,7 +39,7 @@ from .onefun import Onefun
 from .utilities import Interval, coerce_list
 
 
-class Chebtech(Onefun, ABC):
+class Chebtech(Onefun):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
