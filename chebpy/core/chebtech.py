@@ -37,11 +37,11 @@ from .algorithms import (
 from .decorators import self_empty
 from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
-from .smoothfun import Smoothfun
+from .onefun import Onefun
 from .utilities import Interval, coerce_list
 
 
-class Chebtech(Smoothfun, ABC):
+class Chebtech(Onefun, ABC):
     """Abstract base class serving as the template for Chebtech1 and Chebtech subclasses.
 
     Chebtech objects always work with first-kind coefficients, so much
