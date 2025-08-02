@@ -33,7 +33,7 @@ def test_size():
     """Test the size method of Bndfun."""
     cfs = rng.random(10)
     subinterval = Interval()
-    b2 = Bndfun(Chebtech(cfs), subinterval)
+    b2 = Bndfun(onefun=Chebtech(cfs), interval=subinterval)
     assert b2.size == cfs.size
 
 

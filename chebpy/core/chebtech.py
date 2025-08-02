@@ -34,7 +34,6 @@ from .algorithms import (
 )
 from .basefun import BaseFun
 from .decorators import self_empty
-from .plotting import plotfun, plotfuncoeffs
 from .settings import _preferences as prefs
 from .utilities import Interval, coerce_list
 
@@ -108,6 +107,7 @@ class Chebtech(BaseFun):
     def initvalues(cls, values, *, interval=None):
         """Initialise a Chebtech from an array of values at Chebyshev points."""
         return cls(cls._vals2coeffs(values), interval=interval)
+
 
     def __init__(self, coeffs, interval=None):
         """Initialize a Chebtech object.
@@ -563,34 +563,34 @@ class Chebtech(BaseFun):
         """
         return coeffs2vals2(coeffs)
 
-    # ----------
-    #  plotting
-    # ----------
-    def plot(self, ax=None, **kwargs):
-        """Plot the Chebtech on the interval [-1, 1].
-
-        Args:
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-            **kwargs: Additional keyword arguments to pass to the plot function.
-
-        Returns:
-            matplotlib.lines.Line2D: The line object created by the plot.
-        """
-        return plotfun(self, (-1, 1), ax=ax, **kwargs)
-
-
-    def plotcoeffs(self, ax=None, **kwargs):
-        """Plot the absolute values of the Chebyshev coefficients.
-
-        Args:
-            ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
-            **kwargs: Additional keyword arguments to pass to the plot function.
-
-        Returns:
-            matplotlib.lines.Line2D: The line object created by the plot.
-        """
-        ax = ax or plt.gca()
-        return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
+    # # ----------
+    # #  plotting
+    # # ----------
+    # def plot(self, ax=None, **kwargs):
+    #     """Plot the Chebtech on the interval [-1, 1].
+    #
+    #     Args:
+    #         ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+    #         **kwargs: Additional keyword arguments to pass to the plot function.
+    #
+    #     Returns:
+    #         matplotlib.lines.Line2D: The line object created by the plot.
+    #     """
+    #     return plotfun(self, (-1, 1), ax=ax, **kwargs)
+    #
+    #
+    # def plotcoeffs(self, ax=None, **kwargs):
+    #     """Plot the absolute values of the Chebyshev coefficients.
+    #
+    #     Args:
+    #         ax (matplotlib.axes.Axes, optional): The axes on which to plot. Defaults to None.
+    #         **kwargs: Additional keyword arguments to pass to the plot function.
+    #
+    #     Returns:
+    #         matplotlib.lines.Line2D: The line object created by the plot.
+    #     """
+    #     ax = ax or plt.gca()
+    #     return plotfuncoeffs(abs(self.coeffs), ax=ax, **kwargs)
 
     def restrict(self, subinterval):
         """Restrict this function to a subinterval.
@@ -609,22 +609,24 @@ class Chebtech(BaseFun):
         Raises:
             NotSubinterval: If the subinterval is not contained within [-1, 1].
         """
-        from .exceptions import NotSubinterval
+        pass
 
-        interval = Interval(-1, 1)
-        subinterval = Interval(*subinterval)
-
-        if subinterval not in interval:
-            raise NotSubinterval(interval, subinterval)
-        if interval == subinterval:
-            return self
-        else:
-            # Create a function that evaluates self at points mapped from [-1, 1] to subinterval
-            a, b = subinterval
-            def restricted_fun(x):
-                # Map points from [-1, 1] to subinterval
-                mapped_x = 0.5 * (b - a) * x + 0.5 * (b + a)
-                return self(mapped_x)
-
-            # Create a new Chebtech with the same number of degrees of freedom
-            return self.__class__.initfun_fixedlen(restricted_fun, self.size, interval=self.interval)
+        # from .exceptions import NotSubinterval
+        #
+        # interval = Interval(-1, 1)
+        # subinterval = Interval(*subinterval)
+        #
+        # if subinterval not in interval:
+        #     raise NotSubinterval(interval, subinterval)
+        # if interval == subinterval:
+        #     return self
+        # else:
+        #     # Create a function that evaluates self at points mapped from [-1, 1] to subinterval
+        #     a, b = subinterval
+        #     def restricted_fun(x):
+        #         # Map points from [-1, 1] to subinterval
+        #         mapped_x = 0.5 * (b - a) * x + 0.5 * (b + a)
+        #         return self(mapped_x)
+        #
+        #     # Create a new Chebtech with the same number of degrees of freedom
+        #     return self.__class__.initfun_fixedlen(restricted_fun, self.size, interval=self.interval)

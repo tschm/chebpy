@@ -290,11 +290,14 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
         UserWarning: If the constructor does not converge within the maximum
             number of iterations.
     """
+
+    from numpy.polynomial.chebyshev import chebpts2 as np_chebpts2
+
     minpow2 = 4  # 17 points
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
-        points = cls._chebpts(n)
+        points = np_chebpts2(n)
         values = fun(points)
         coeffs = cls._vals2coeffs(values)
         eps = prefs.eps
@@ -385,7 +388,7 @@ def chebpts2(n: int) -> np.ndarray:
         pts = np.cos(nn[::-1] * np.pi / (n - 1))
     return pts
 
-
+np.polynomial.chebyshev.
 def vals2coeffs2(vals: np.ndarray) -> np.ndarray:
     """Convert function values to Chebyshev coefficients.
 

@@ -98,6 +98,11 @@ class Bndfun(BaseFun):
     #  alternative constructors
     # --------------------------
     @classmethod
+    def from_coefficients(cls, coeffs, interval=None):
+        """Initialize from coefficients."""
+
+
+    @classmethod
     def initempty(cls):
         """Initialize an empty function.
 
