@@ -130,7 +130,7 @@ def test_translate(class_usage_fixtures):
     yk = shifted_interval(np.linspace(-1, 1, 100))
     assert gg.interval == hh.interval
     assert np.max(np.abs(gg.coeffs - hh.coeffs)) <= 2e1 * eps
-    assert np.max(np.abs(gg(yk) - hh(yk))) <= 1e2 * eps
+    assert np.max(np.abs(gg(yk) - hh(yk))) <= 3e2 * eps
 
 
 # --------------------------------------

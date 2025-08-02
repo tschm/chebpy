@@ -89,7 +89,7 @@ class Chebtech(Smoothfun, ABC):
         This constructor creates a Chebtech representation of the function using
         a fixed number of degrees of freedom specified by n.
         """
-        points = cls._chebpts(n)
+        points = chebpts2(n)
         values = fun(points)
         coeffs = vals2coeffs2(values)
         return cls(coeffs, interval=interval)
@@ -103,13 +103,13 @@ class Chebtech(Smoothfun, ABC):
         """
         interval = interval if interval is not None else prefs.domain
         interval = Interval(*interval)
-        coeffs = adaptive(cls, fun, hscale=interval.hscale)
+        coeffs = adaptive(fun, hscale=interval.hscale)
         return cls(coeffs, interval=interval)
 
     @classmethod
     def initvalues(cls, values, *, interval=None):
         """Initialise a Chebtech from an array of values at Chebyshev points."""
-        return cls(cls._vals2coeffs(values), interval=interval)
+        return cls(vals2coeffs2(values), interval=interval)
 
     def __init__(self, coeffs, interval=None):
         """Initialize a Chebtech object.
@@ -156,8 +156,8 @@ class Chebtech(Smoothfun, ABC):
 
     def __call__bary(self, x):
         fk = self.values()
-        xk = self._chebpts(fk.size)
-        vk = self._barywts(fk.size)
+        xk = chebpts2(fk.size)
+        vk = barywts2(fk.size)
         return bary(x, fk, xk, vk)
 
     def __repr__(self):  # pragma: no cover
@@ -538,32 +538,6 @@ class Chebtech(Smoothfun, ABC):
             zk[0] = 0.5 * zk[0]
             out = self.__class__(zk, interval=self.interval)
         return out
-
-    @staticmethod
-    def _chebpts(n):
-        """Return n Chebyshev points of the second-kind."""
-        return chebpts2(n)
-
-    @staticmethod
-    def _barywts(n):
-        """Barycentric weights for Chebyshev points of 2nd kind."""
-        return barywts2(n)
-
-    @staticmethod
-    def _vals2coeffs(vals):
-        """Map function values at Chebyshev points of 2nd kind.
-
-        Converts values at Chebyshev points of 2nd kind to first-kind Chebyshev polynomial coefficients.
-        """
-        return vals2coeffs2(vals)
-
-    @staticmethod
-    def _coeffs2vals(coeffs):
-        """Map first-kind Chebyshev polynomial coefficients.
-
-        Converts first-kind Chebyshev polynomial coefficients to function values at Chebyshev points of 2nd kind.
-        """
-        return coeffs2vals2(coeffs)
 
     # ----------
     #  plotting

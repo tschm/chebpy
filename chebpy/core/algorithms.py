@@ -13,6 +13,7 @@ import warnings
 
 import numpy as np
 from numpy.fft import fft, ifft
+from numpy.polynomial.chebyshev import chebpts2 as np_chebpts2
 
 from .decorators import preandpostprocess
 from .settings import _preferences as prefs
@@ -268,7 +269,7 @@ def standard_chop(coeffs: np.ndarray, tol: float = None) -> int:
     return min((cutoff, n - 1))
 
 
-def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
+def adaptive(fun: callable, hscale: float = 1, maxpow2: int = None) -> np.ndarray:
     """Adaptively determine the number of points needed to represent a function.
 
     This function implements an adaptive algorithm to determine the appropriate
@@ -277,7 +278,6 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
     and checking if the resulting coefficients can be truncated.
 
     Args:
-        cls: The class that provides the _chebpts and _vals2coeffs methods.
         fun (callable): The function to be approximated.
         hscale (float, optional): Scale factor for the tolerance. Defaults to 1.
         maxpow2 (int, optional): Maximum power of 2 to try. If None, uses the
@@ -294,9 +294,9 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
     maxpow2 = maxpow2 if maxpow2 is not None else prefs.maxpow2
     for k in range(minpow2, max(minpow2, maxpow2) + 1):
         n = 2**k + 1
-        points = cls._chebpts(n)
+        points = chebpts2(n)
         values = fun(points)
-        coeffs = cls._vals2coeffs(values)
+        coeffs = vals2coeffs2(values)
         eps = prefs.eps
         tol = eps * max(hscale, 1)  # scale (decrease) tolerance by hscale
         chplen = standard_chop(coeffs, tol=tol)
@@ -304,7 +304,7 @@ def adaptive(cls: type, fun: callable, hscale: float = 1, maxpow2: int = None) -
             coeffs = coeffs[:chplen]
             break
         if k == maxpow2:
-            warnings.warn(f"The {cls.__name__} constructor did not converge: using {n} points")
+            warnings.warn(f"No convergence: using {n} points")
             break
     return coeffs
 
@@ -378,12 +378,14 @@ def chebpts2(n: int) -> np.ndarray:
     Note:
         The points are ordered from left to right on the interval [-1, 1].
     """
+    if n == 0:
+        return np.array([])
+
     if n == 1:
-        pts = np.array([0.0])
-    else:
-        nn = np.arange(n)
-        pts = np.cos(nn[::-1] * np.pi / (n - 1))
-    return pts
+        return np.array([0.0])
+
+    return np_chebpts2(n)
+
 
 
 def vals2coeffs2(vals: np.ndarray) -> np.ndarray:

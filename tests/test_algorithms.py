@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from chebpy.core.algorithms import bary, clenshaw, coeffmult
+from chebpy.core.algorithms import bary, clenshaw, coeffmult, chebpts2, vals2coeffs2, barywts2
 from chebpy.core.chebtech import Chebtech
 
 from .utilities import cos, eps, exp, scaled_tol
@@ -40,8 +40,8 @@ def evaluation_fixtures() -> dict[str, Any]:
         Dictionary containing test fixtures for evaluation
     """
     npts = 15
-    xk = Chebtech._chebpts(npts)
-    vk = Chebtech._barywts(npts)
+    xk = chebpts2(npts)
+    vk = barywts2(npts)
     fk = rng.random(npts)
     ak = rng.random(11)
     xx = -1 + 2 * rng.random(9)
@@ -156,7 +156,7 @@ def test_bary_clenshaw_consistency() -> None:
 evalpts = [np.linspace(-1, 1, int(n)) for n in np.array([1e2, 1e3, 1e4, 1e5])]
 
 # Define arrays of Chebyshev points for interpolation
-ptsarry = [Chebtech._chebpts(n) for n in np.array([100, 200])]
+ptsarry = [chebpts2(n) for n in np.array([100, 200])]
 
 # List of evaluation methods to test
 methods = [bary, clenshaw]
@@ -186,12 +186,12 @@ def _eval_tester(method: Callable, fun: Callable, evalpts: np.ndarray, chebpts: 
     fvals = fun(xk)
 
     if method is bary:
-        vk = Chebtech._barywts(fvals.size)
+        vk = barywts2(fvals.size)
         a = bary(x, fvals, xk, vk)
         tol_multiplier = 1e0
 
     elif method is clenshaw:
-        ak = Chebtech._vals2coeffs(fvals)
+        ak = vals2coeffs2(fvals)
         a = clenshaw(x, ak)
         tol_multiplier = 2e1
 

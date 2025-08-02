@@ -7,6 +7,7 @@ including from values, coefficients, constants, and functions.
 import numpy as np
 import pytest
 
+from chebpy.core.algorithms import vals2coeffs2
 from chebpy.core.chebtech import Chebtech
 
 from ..utilities import eps
@@ -27,13 +28,13 @@ def test_initvalues():
     # test n = 0 case separately
     vals = rng.random(0)
     fun = Chebtech.initvalues(vals)
-    cfs = Chebtech._vals2coeffs(vals)
+    cfs = vals2coeffs2(vals)
     assert fun.coeffs.size == cfs.size == 0
     # now test the other cases
     for n in range(1, 10):
         vals = rng.random(n)
         fun = Chebtech.initvalues(vals)
-        cfs = Chebtech._vals2coeffs(vals)
+        cfs = vals2coeffs2(vals)
         assert np.max(np.abs(fun.coeffs - cfs)) == 0.0
 
 

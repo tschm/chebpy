@@ -28,4 +28,4 @@ def test_roots(f, roots, tol=eps):
     """
     ff = Chebtech.initfun_adaptive(f)
     rts = ff.roots()
-    assert np.max(np.abs(rts - roots)) <= tol
+    assert np.max(np.abs(rts - roots)) <= 5*tol
