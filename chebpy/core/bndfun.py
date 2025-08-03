@@ -26,6 +26,7 @@ def get_tech_class(tech_name):
     """
     if tech_name == "Chebtech":
         from .chebtech import Chebtech
+
         return Chebtech
     else:
         raise ValueError(f"Unknown tech: {tech_name}")

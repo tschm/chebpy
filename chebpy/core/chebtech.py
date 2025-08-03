@@ -620,6 +620,7 @@ class Chebtech(BaseFun):
         else:
             # Create a function that evaluates self at points mapped from [-1, 1] to subinterval
             a, b = subinterval
+
             def restricted_fun(x):
                 # Map points from [-1, 1] to subinterval
                 mapped_x = 0.5 * (b - a) * x + 0.5 * (b + a)
