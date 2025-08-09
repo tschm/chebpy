@@ -1,3 +1,6 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 # Workflow: Continuous Integration
 # Purpose: This workflow runs tests on multiple Python versions to ensure
 #          compatibility and code quality across different environments.
@@ -10,7 +13,8 @@
 
 name: "CI"
 
-on: [push, pull_request]
+on:
+- push
 
 permissions:
   contents: read
@@ -24,16 +28,18 @@ jobs:
     strategy:
       matrix:
         # mongo container action only supported on Linux
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ '3.10', '3.11', '3.12', '3.13' ]
+        os: [ ubuntu-latest ]
+        python-version: [ '3.11', '3.12', '3.13' ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: "Build the virtual environment for ${{ github.repository }}"
+        if: hashFiles('pyproject.toml') != ''
         uses: tschm/cradle/actions/environment@v0.3.06
         with:
           python-version: ${{ matrix.python-version }}
 
       - uses: tschm/cradle/actions/test@v0.3.06
+        if: hashFiles('pyproject.toml') != ''
         with:
           tests-folder: tests

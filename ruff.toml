@@ -55,7 +55,7 @@ target-version = "py312"
 # N: pep8-naming - Check PEP 8 naming conventions
 # W: pycodestyle warnings - PEP 8 style guide warnings
 # UP: pyupgrade - Upgrade syntax for newer Python
-select = ["D", "E", "F", "I", "N", "W", "UP", "NPY", "ERA"]
+select = ["D", "E", "F", "I", "N", "W", "UP"]
 
 [lint.pydocstyle]
 convention = "google"
@@ -71,6 +71,6 @@ line-ending = "auto"
 
 # File-specific rule exceptions
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]        # Allow assert statements in tests
+"src/tests/**/*.py" = ["S101"]        # Allow assert statements in tests
 "book/marimo/*.py" = ["N803", "S101"] # Allow non-lowercase variable names (N803)
                                       # and assert statements in marimo files
