@@ -13,5 +13,9 @@
         "pre-commit",
         "github-actions",
         "devcontainer"
+    ],
+    "timezone": "Asia/Dubai",
+    "schedule": [
+        "before 10am on tuesday"
     ]
 }

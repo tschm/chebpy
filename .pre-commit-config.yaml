@@ -1,3 +1,6 @@
+# This file is part of the tschm/.config-templates repository
+# (https://github.com/tschm/.config-templates).
+#
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -23,6 +26,9 @@ repos:
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2
     hooks:
+      - id: check-renovate
+        args: [ "--verbose" ]
+
       - id: check-github-workflows
         args: ["--verbose"]
 
@@ -36,3 +42,8 @@ repos:
     rev: v0.24.1
     hooks:
       - id: validate-pyproject
+
+  #- repo: https://github.com/crate-ci/typos
+  #  rev: v1.35.1
+  #  hooks:
+  #    - id: typos
