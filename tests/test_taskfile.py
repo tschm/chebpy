@@ -23,14 +23,13 @@ class Result:
 
     @property
     def stdout(self):
-        """
-        Return the process standard output as a str.
-        
+        """Return the process standard output as a str.
+
         Ensures the wrapped CompletedProcess.stdout is a string and returns it unchanged.
-        
+
         Returns:
             str: The process standard output.
-        
+
         Raises:
             AssertionError: If the underlying `CompletedProcess.stdout` is not a `str`.
         """
@@ -57,22 +56,20 @@ class Result:
 
     @property
     def returncode(self):
-        """
-        Return the underlying process exit code.
-        
+        """Return the underlying process exit code.
+
         Returns:
             int: The process' return (exit) code.
         """
         return self.result.returncode
 
     def contains_message(self, message: str) -> bool:
-        """
-        Return True if the given substring appears in the wrapped process stdout.
-        
+        """Return True if the given substring appears in the wrapped process stdout.
+
         Performs a simple, case-sensitive substring check (not a regex) against this Result's stdout.
         Parameters:
             message (str): Substring to search for in stdout.
-        
+
         Returns:
             bool: True when `message` is found in stdout, False otherwise.
         """
@@ -168,9 +165,8 @@ class TestTaskfile:
         self.create_file("book/marimo/test.py", "# Test notebook\n")
 
     def get_task_name(self, base_name):
-        """
-        Return the canonical task name, mapping legacy flat names to grouped names.
-        
+        """Return the canonical task name, mapping legacy flat names to grouped names.
+
         If `base_name` already contains a group prefix (contains ":"), is empty, or starts with "--",
         it is returned unchanged. The special name "help" is translated to "--list-all".
         Otherwise a predefined mapping converts common base names (for example, "build" -> "build:build");
@@ -205,16 +201,19 @@ class TestTaskfile:
         return task_map.get(base_name, base_name)
 
     def run_task(self, task_name, check=True, timeout=30):
-        """
-        Run the specified task via the system `task` command and return a Result wrapping the completed process.
-        
-        The provided task_name is first translated through self.get_task_name() (so base names may be mapped to group-prefixed task names). Execution uses subprocess.run with stdout/stderr captured as text. On success a Result containing the subprocess.CompletedProcess is returned. If the call times out, a Result containing a placeholder CompletedProcess (returncode 0 and a short stdout message indicating the timeout) is returned.
-        
+        """Run the specified task via the system `task` command and return a Result wrapping the completed process.
+
+        The provided task_name is first translated through self.get_task_name() (so base names may be mapped to
+        group-prefixed task names). Execution uses subprocess.run with stdout/stderr captured as text.
+        On success a Result containing the subprocess.CompletedProcess is returned. If the call times out,
+        a Result containing a placeholder CompletedProcess (returncode 0 and a short stdout message
+        indicating the timeout) is returned.
+
         Parameters:
             task_name (str): Task identifier to run; may be a base name that will be mapped to a grouped name.
             check (bool): If True, subprocess.run's check behavior is used (non-zero exit may raise).
             timeout (int | float): Seconds to wait before treating the invocation as timed out.
-        
+
         Returns:
             Result: Wrapper around the subprocess.CompletedProcess for the executed task (or a timeout placeholder).
         """
@@ -417,10 +416,12 @@ class TestTaskfile:
         )
 
     def test_book_task(self):
-        """
-        Verify the "book" task orchestrates its dependent tasks and produces expected book-related output.
-        
-        This test sets up minimal tests, source, marimo, and pyproject structures, runs the `book` task (without raising on nonzero exit), and asserts the task output contains at least one of the expected messages produced by its dependent subtasks (tests, docs build, notebook export, or virtualenv/dependency setup).
+        """Verify the "book" task orchestrates its dependent tasks and produces expected book-related output.
+
+        This test sets up minimal tests, source, marimo, and pyproject structures, runs the `book` task
+        (without raising on nonzero exit), and asserts the task output contains at least one of the expected
+        messages produced by its dependent subtasks (tests, docs build, notebook export, or virtualenv/dependency
+        setup).
         """
         # Create necessary directory structure
         self.create_tests_structure()
@@ -475,10 +476,14 @@ class TestTaskfile:
         )
 
     def test_all_tasks_defined(self):
-        """
-        Verify that every task declared by `task --list-all` has a corresponding test method on this test class.
-        
-        This test runs `task --list-all` (including included taskfiles), parses lines that look like task definitions (lines containing a `*`), and collects task names. It skips the special entries `default` and `help` and known group names (e.g., `build`, `quality`, `docs`, `cleanup`). For grouped task names (`group:task`) the base task name after the colon is used. A small name mapping is applied (currently `"cleanup" -> "clean"`) to match test method naming. For each discovered task the test asserts that a method named `test_{task}_task` exists on the test instance.
+        """Verify that every task declared by `task --list-all` has a corresponding test method on this test class.
+
+        This test runs `task --list-all` (including included taskfiles), parses lines that look like task
+        definitions (lines containing a `*`), and collects task names. It skips the special entries `default`
+        and `help` and known group names (e.g., `build`, `quality`, `docs`, `cleanup`). For grouped task names
+        (`group:task`) the base task name after the colon is used. A small name mapping is applied (currently
+        `"cleanup" -> "clean"`) to match test method naming. For each discovered task the test asserts that a
+        method named `test_{task}_task` exists on the test instance.
         """
         # Get list of all tasks from task --list-all to include tasks from included taskfiles
         result = self.run_task("--list-all")
