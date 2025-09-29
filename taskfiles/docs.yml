@@ -49,12 +49,12 @@ tasks:
     desc: Export Marimo notebooks to HTML
     cmds:
       - task build:install -s
-      - uv pip install marimo
       - printf "${BLUE}[INFO] Exporting notebooks from {{.MARIMO_FOLDER}}...${RESET}\n"
       - |
         if [ ! -d "{{.MARIMO_FOLDER}}" ]; then
           printf "${YELLOW}[WARN] Directory '{{.MARIMO_FOLDER}}' does not exist. Skipping marimushka.${RESET}\n"
         else
+          uv pip install marimo
           mkdir -p _marimushka
           py_files=$(find "{{.MARIMO_FOLDER}}" -maxdepth 1 -name "*.py" | tr '\n' ' ')
           if [ -z "$py_files" ]; then
